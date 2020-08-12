@@ -1,0 +1,27 @@
+{
+  "name": "node-api",
+  "version": "1.0.0",
+  "description": "API REST with Node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moraes575/node-api.git"
+  },
+  "keywords": [
+    "node",
+    "api",
+    "rest"
+  ],
+  "author": "Matheus Moraes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/moraes575/node-api/issues"
+  },
+  "homepage": "https://github.com/moraes575/node-api#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
