@@ -1,10 +1,10 @@
 const express = require('express')
 const app = express()
 
-app.use((req, res, next) => {
-    res.status(200).send({
-        message: 'Ok, worked!'
-    })
-})
+const productsRouter = require('./routers/products')
+const ordersRouter = require('./routers/orders')
+
+app.use('/products', productsRouter)
+app.use('/orders', ordersRouter)
 
 module.exports = app
