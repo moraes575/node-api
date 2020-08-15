@@ -6,7 +6,7 @@ router.get('/:id', (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
-            'SELECT * FROM orders WHERE id = ?',
+            'SELECT o.id AS order_id, o.quantity, o.product_id, p.name, p.price FROM orders o INNER JOIN products p ON o.product_id = p.id WHERE o.id = ?',
             [req.params.id],
             (error, result, fields) => {
                 if (error) { return res.status(500).send({ error: error }) }
@@ -15,7 +15,18 @@ router.get('/:id', (req, res, next) => {
                         message: `Order not found. ID: ${req.params.id}`
                     })
                 }
-                return res.status(200).send(result[0])
+                const response = {
+                    order: {
+                        id: result[0].order_id,
+                        quantity: result[0].quantity,
+                        product: {
+                            id: result[0].product_id,
+                            name: result[0].name,
+                            price: result[0].price
+                        }
+                    }
+                }
+                return res.status(200).send(response.order)
             }
         )
     })
