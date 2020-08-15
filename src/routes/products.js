@@ -29,7 +29,7 @@ router.get('/', (req, res, next) => {
             (error, result, fields) => {
                 if (error) { return res.status(500).send({ error: error }) }
                 const response = {
-                    quantity: result.length,
+                    length: result.length,
                     products: result.map(product => {
                         return {
                             id: product.id,
