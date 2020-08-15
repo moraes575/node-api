@@ -50,23 +50,34 @@ router.get('/', (req, res, next) => {
 router.post('/', (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
-        conn.query(
-            'INSERT INTO orders (quantity, product_id) VALUES (?, ?)',
-            [req.body.quantity, req.body.product_id],
+        conn.query('SELECT * FROM products WHERE id = ?',
+            [req.body.product_id],
             (error, result, field) => {
-                conn.release()
                 if (error) { return res.status(500).send({ error: error }) }
-                const response = {
-                    order: {
-                        id: result.insertId,
-                        quantity: req.body.quantity,
-                        product_id: req.body.product_id,
-                        links: {
-                            href: 'http://localhost:3000/orders/' + result.insertId
-                        }
-                    }
+                if (result.length === 0) {
+                    return res.status(404).send({
+                        message: `Product not found. ID: ${req.body.product_id}`
+                    })
                 }
-                return res.status(201).send(response.order)
+                conn.query(
+                    'INSERT INTO orders (quantity, product_id) VALUES (?, ?)',
+                    [req.body.quantity, req.body.product_id],
+                    (error, result, field) => {
+                        conn.release()
+                        if (error) { return res.status(500).send({ error: error }) }
+                        const response = {
+                            order: {
+                                id: result.insertId,
+                                quantity: req.body.quantity,
+                                product_id: req.body.product_id,
+                                links: {
+                                    href: 'http://localhost:3000/orders/' + result.insertId
+                                }
+                            }
+                        }
+                        return res.status(201).send(response.order)
+                    }
+                )
             }
         )
     })
@@ -75,24 +86,35 @@ router.post('/', (req, res, next) => {
 router.put('/:id', (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
-        conn.query(
-            'UPDATE orders SET quantity = ?, product_id = ? WHERE id = ?',
-            [req.body.quantity, req.body.product_id, req.params.id],
+        conn.query('SELECT * FROM products WHERE id = ?',
+            [req.body.product_id],
             (error, result, field) => {
-                conn.release()
                 if (error) { return res.status(500).send({ error: error }) }
-                if (result.affectedRows === 0) { return res.status(404).send({ message: `Order not found. ID: ${req.params.id}` }) }
-                const response = {
-                    order: {
-                        id: req.params.id,
-                        quantity: req.body.quantity,
-                        product_id: req.body.product_id,
-                        links: {
-                            href: 'http://localhost:3000/orders/' + req.params.id
-                        }
-                    }
+                if (result.length === 0) {
+                    return res.status(404).send({
+                        message: `Product not found. ID: ${req.body.product_id}`
+                    })
                 }
-                return res.status(200).send(response.order)
+                conn.query(
+                    'UPDATE orders SET quantity = ?, product_id = ? WHERE id = ?',
+                    [req.body.quantity, req.body.product_id, req.params.id],
+                    (error, result, field) => {
+                        conn.release()
+                        if (error) { return res.status(500).send({ error: error }) }
+                        if (result.affectedRows === 0) { return res.status(404).send({ message: `Order not found. ID: ${req.params.id}` }) }
+                        const response = {
+                            order: {
+                                id: req.params.id,
+                                quantity: req.body.quantity,
+                                product_id: req.body.product_id,
+                                links: {
+                                    href: 'http://localhost:3000/orders/' + req.params.id
+                                }
+                            }
+                        }
+                        return res.status(200).send(response.order)
+                    }
+                )
             }
         )
     })
