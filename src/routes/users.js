@@ -84,6 +84,29 @@ router.post('/', (req, res, next) => {
     )
 })
 
+router.post('/login', (req, res, next) => {
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) }
+        const query = 'SELECT * FROM users WHERE email = ?'
+        conn.query(query, [req.body.email], (error, result, fields) => {
+            conn.release()
+            if (error) { return res.status(500).send({ error: error }) }
+            if (result.length < 1) {
+                return res.status(401).send({ message: 'Authentication failed' })
+            }
+            bcrypt.compare(req.body.password, result[0].password, (error, result) => {
+                if (error) {
+                    return res.status(401).send({ message: 'Authentication failed' })
+                }
+                if (result) {
+                    return res.status(200).send({ message: 'Authentication completed' })
+                }
+                return res.status(401).send({ message: 'Authentication failed' })
+            })
+        })
+    })
+})
+
 router.put('/:id', (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
