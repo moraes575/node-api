@@ -51,27 +51,34 @@ router.get('/', (req, res, next) => {
 router.post('/', (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
-        bcrypt.hash(req.body.password, 10, (errBcrypt, hash) => {
-            if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
-            conn.query(
-                'INSERT INTO users (email, password) VALUES (?, ?)',
-                [req.body.email, hash],
-                (error, result, field) => {
-                    conn.release()
-                    if (error) { return res.status(500).send({ error: error }) }
-                    const response = {
-                        user: {
-                            id: result.insertId,
-                            email: req.body.email,
-                            password: hash,
-                            links: {
-                                href: 'http://localhost:3000/users/' + result.insertId
+        conn.query('SELECT * FROM users WHERE email = ?', [req.body.email], (error, result) => {
+            if (error) { return res.status(500).send({ error: error }) }
+            if (result.length > 0) {
+                return res.status(409).send({ message: 'Email already exists' })
+            } else {
+                bcrypt.hash(req.body.password, 10, (errBcrypt, hash) => {
+                    if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
+                    conn.query(
+                        'INSERT INTO users (email, password) VALUES (?, ?)',
+                        [req.body.email, hash],
+                        (error, result, field) => {
+                            conn.release()
+                            if (error) { return res.status(500).send({ error: error }) }
+                            const response = {
+                                user: {
+                                    id: result.insertId,
+                                    email: req.body.email,
+                                    password: hash,
+                                    links: {
+                                        href: 'http://localhost:3000/users/' + result.insertId
+                                    }
+                                }
                             }
+                            return res.status(201).send(response.user)
                         }
-                    }
-                    return res.status(201).send(response.user)
-                }
-            )
+                    )
+                })
+            }
         })
     }
     )
@@ -80,28 +87,36 @@ router.post('/', (req, res, next) => {
 router.put('/:id', (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
-        bcrypt.hash(req.body.password, 10, (errBcrypt, hash) => {
-            if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
-            conn.query(
-                'UPDATE users SET email = ?, password = ? WHERE id = ?',
-                [req.body.email, hash, req.params.id],
-                (error, result, field) => {
-                    conn.release()
-                    if (error) { return res.status(500).send({ error: error }) }
-                    if (result.affectedRows === 0) { return res.status(404).send({ message: `User not found. ID: ${req.params.id}` }) }
-                    const response = {
-                        user: {
-                            id: req.params.id,
-                            email: req.body.email,
-                            password: hash,
-                            links: {
-                                href: 'http://localhost:3000/users/' + req.params.id
+        conn.query('SELECT * FROM users WHERE email = ?', [req.body.email], (error, result) => {
+            if (error) { return res.status(500).send({ error: errBcrypt }) }
+            if (result === []) { result[0].id = 0 }
+            if (result.length > 0 && result[0].id != req.params.id) {
+                return res.status(409).send({ message: 'Email already exists' })
+            } else {
+                bcrypt.hash(req.body.password, 10, (errBcrypt, hash) => {
+                    if (errBcrypt) { return res.status(500).send({ error: errBcrypt }) }
+                    conn.query(
+                        'UPDATE users SET email = ?, password = ? WHERE id = ?',
+                        [req.body.email, hash, req.params.id],
+                        (error, result, field) => {
+                            conn.release()
+                            if (error) { return res.status(500).send({ error: error }) }
+                            if (result.affectedRows === 0) { return res.status(404).send({ message: `User not found. ID: ${req.params.id}` }) }
+                            const response = {
+                                user: {
+                                    id: req.params.id,
+                                    email: req.body.email,
+                                    password: hash,
+                                    links: {
+                                        href: 'http://localhost:3000/users/' + req.params.id
+                                    }
+                                }
                             }
+                            return res.status(200).send(response.user)
                         }
-                    }
-                    return res.status(200).send(response.user)
-                }
-            )
+                    )
+                })
+            }
         })
     }
     )
