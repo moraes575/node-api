@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const mysql = require('../database/mysql').pool
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 router.get('/:id', (req, res, next) => {
     mysql.getConnection((error, conn) => {
@@ -94,12 +95,19 @@ router.post('/login', (req, res, next) => {
             if (result.length < 1) {
                 return res.status(401).send({ message: 'Authentication failed' })
             }
-            bcrypt.compare(req.body.password, result[0].password, (error, result) => {
+            bcrypt.compare(req.body.password, result[0].password, (error, isEqual) => {
                 if (error) {
                     return res.status(401).send({ message: 'Authentication failed' })
                 }
-                if (result) {
-                    return res.status(200).send({ message: 'Authentication completed' })
+                if (isEqual) {
+                    const token = jwt.sign({
+                        id: result[0].id,
+                        email: result[0].email
+                    },
+                        process.env.JWT_KEY, {
+                        expiresIn: '1h'
+                    })
+                    return res.status(200).send({ message: 'Authentication completed', token: token })
                 }
                 return res.status(401).send({ message: 'Authentication failed' })
             })
