@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const mysql = require('../database/mysql').pool
+const login = require('../middleware/login')
 
 router.get('/:id', (req, res, next) => {
     mysql.getConnection((error, conn) => {
@@ -58,7 +59,7 @@ router.get('/', (req, res, next) => {
     })
 })
 
-router.post('/', (req, res, next) => {
+router.post('/', login, (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query('SELECT * FROM products WHERE id = ?',
@@ -94,7 +95,7 @@ router.post('/', (req, res, next) => {
     })
 })
 
-router.put('/:id', (req, res, next) => {
+router.put('/:id', login, (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query('SELECT * FROM products WHERE id = ?',
@@ -131,7 +132,7 @@ router.put('/:id', (req, res, next) => {
     })
 })
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', login, (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(

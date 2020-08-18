@@ -3,7 +3,7 @@ const router = express.Router()
 const mysql = require('../database/mysql').pool
 const multer = require('multer')
 const uuid = require('uuid')
-const app = require('../app')
+const login = require('../middleware/login')
 
 const storage = multer.diskStorage({
     destination: (req, file, callback) => {
@@ -76,7 +76,7 @@ router.get('/', (req, res, next) => {
     })
 })
 
-router.post('/', (req, res, next) => {
+router.post('/', login, (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
@@ -101,7 +101,7 @@ router.post('/', (req, res, next) => {
     })
 })
 
-router.patch('/:id', upload.single('product_image'), (req, res, next) => {
+router.patch('/:id', login, upload.single('product_image'), (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
@@ -126,7 +126,7 @@ router.patch('/:id', upload.single('product_image'), (req, res, next) => {
     })
 })
 
-router.put('/:id', (req, res, next) => {
+router.put('/:id', login, (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
@@ -152,7 +152,7 @@ router.put('/:id', (req, res, next) => {
     })
 })
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', login, (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) { return res.status(500).send({ error: error }) }
         conn.query(
